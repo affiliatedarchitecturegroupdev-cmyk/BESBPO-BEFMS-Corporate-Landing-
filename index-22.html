@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BEFMS — Built Environment Facilities Management Services</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --teal:#1E4D4A; --teal-deep:#0E2826; --teal-light:#3D7A75;
+    --amber:#C28E3F; --amber-deep:#96702F; --amber-light:#E0B36B;
+    --white:#FFFFFF; --ink:#0B1714;
+    --glass-bg:rgba(255,255,255,0.10); --glass-border:rgba(255,255,255,0.22);
+    --glass-bg-light:rgba(255,255,255,0.55); --glass-border-light:rgba(255,255,255,0.7);
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--font-body);background:var(--teal-deep);color:var(--white);line-height:1.6;overflow-x:hidden;position:relative;}
+
+  /* ===== AMBIENT BACKDROP ===== */
+  .ambient-bg{position:fixed;inset:0;z-index:-2;background:var(--teal-deep);overflow:hidden;}
+  .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.55;}
+  .blob1{width:600px;height:600px;background:var(--teal-light);top:-200px;left:-150px;animation:float1 22s ease-in-out infinite;}
+  .blob2{width:520px;height:520px;background:var(--amber);top:30%;right:-180px;animation:float2 26s ease-in-out infinite;}
+  .blob3{width:480px;height:480px;background:#2A6B63;bottom:-180px;left:20%;animation:float3 19s ease-in-out infinite;}
+  @keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(80px,60px);}}
+  @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-70px,90px);}}
+  @keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(60px,-70px);}}
+
+  /* ===== GLASS PRIMITIVES ===== */
+  .glass{background:var(--glass-bg);border:1px solid var(--glass-border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+  .glass-light{background:var(--glass-bg-light);border:1px solid var(--glass-border-light);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.08);color:var(--ink);}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:300;padding:0 2.5rem;height:78px;display:flex;align-items:center;justify-content:space-between;}
+  .nav-glass{position:absolute;inset:0;background:rgba(14,40,38,0.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.1);}
+  .nav-content{position:relative;z-index:2;width:100%;display:flex;align-items:center;justify-content:space-between;}
+  .nav-logo{display:flex;align-items:center;gap:.7rem;}
+  .nav-mark{width:30px;height:30px;}
+  .nav-logo-text{font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:var(--white);}
+  .nav-logo-sub{display:block;font-family:var(--font-mono);font-size:.46rem;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-top:1px;}
+  .nav-links{display:flex;gap:1.6rem;list-style:none;align-items:center;}
+  .nav-links a{font-size:.78rem;font-weight:500;color:rgba(255,255,255,.8);text-decoration:none;transition:color .2s;}
+  .nav-links a:hover{color:var(--amber-light);}
+  .nav-cta{background:var(--amber) !important;color:var(--teal-deep) !important;padding:.55rem 1.3rem !important;border-radius:30px !important;font-weight:700 !important;}
+  .nav-cta:hover{background:var(--amber-deep) !important;color:var(--white) !important;}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--white);}
+  .mobile-nav{display:none;position:fixed;top:78px;left:0;right:0;background:rgba(14,40,38,0.92);backdrop-filter:blur(20px);padding:1.5rem 2rem;flex-direction:column;gap:1.1rem;z-index:299;}
+  .mobile-nav.open{display:flex;}
+  .mobile-nav a{font-size:.9rem;font-weight:500;color:var(--white);text-decoration:none;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.1);}
+
+  /* ===== HERO GLASS SLIDER ===== */
+  .hero{min-height:100vh;position:relative;display:flex;align-items:center;padding-top:78px;}
+  .hero-inner{max-width:1280px;margin:0 auto;padding:3rem 2.5rem;width:100%;position:relative;z-index:2;}
+  .slider-stage{position:relative;height:480px;}
+  .glass-slide{position:absolute;inset:0;border-radius:24px;padding:3rem;display:flex;flex-direction:column;justify-content:center;opacity:0;visibility:hidden;transform:translateY(20px) scale(.98);transition:opacity .6s ease, transform .6s ease;}
+  .glass-slide.active{opacity:1;visibility:visible;transform:translateY(0) scale(1);z-index:2;}
+  .slide-tag{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber-light);margin-bottom:1.2rem;display:flex;align-items:center;gap:.6rem;font-weight:600;}
+  .slide-tag::before{content:'';width:22px;height:1px;background:var(--amber-light);}
+  .slide-headline{font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,3.6vw,3rem);line-height:1.15;color:var(--white);margin-bottom:1.1rem;max-width:680px;}
+  .slide-headline em{font-style:italic;color:var(--amber-light);font-weight:500;}
+  .slide-body{font-size:.98rem;font-weight:300;color:rgba(255,255,255,.75);max-width:520px;line-height:1.6;}
+  .slider-dots{display:flex;gap:.6rem;margin-top:2rem;}
+  .slider-dot{width:30px;height:4px;border-radius:2px;background:rgba(255,255,255,.25);cursor:pointer;border:none;transition:background .2s;}
+  .slider-dot.active{background:var(--amber);}
+  .slider-arrows{position:absolute;bottom:0;right:0;display:flex;gap:.6rem;z-index:10;}
+  .slider-arrow{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;backdrop-filter:blur(10px);}
+  .slider-arrow:hover{background:rgba(255,255,255,.2);}
+
+  section.page-section{padding:6rem 2.5rem;position:relative;z-index:2;}
+  .section-inner{max-width:1280px;margin:0 auto;}
+  .section-eyebrow{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;font-weight:600;color:var(--amber-light);}
+  .section-eyebrow::before{content:'';width:20px;height:1px;background:var(--amber-light);}
+  .section-title{font-family:var(--font-display);font-weight:700;font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.18;margin-bottom:1.1rem;color:var(--white);}
+  .section-lead{font-size:.96rem;font-weight:300;line-height:1.7;max-width:640px;color:rgba(255,255,255,.7);}
+
+  /* ===== LIVE TILES DASHBOARD ===== */
+  .tiles-grid{display:grid;grid-template-columns:repeat(4, 1fr);grid-auto-rows:140px;gap:1rem;margin-top:2.6rem;}
+  .tile{border-radius:18px;padding:1.3rem;position:relative;overflow:hidden;cursor:default;transition:transform .25s ease;}
+  .tile:hover{transform:translateY(-4px);}
+  .tile.w2{grid-column:span 2;}
+  .tile.h2{grid-row:span 2;}
+  .tile-flip-inner{position:relative;width:100%;height:100%;}
+  .tile-face{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;transition:opacity .5s ease;}
+  .tile-face.back{opacity:0;}
+  .tile.flipped .tile-face.front{opacity:0;}
+  .tile.flipped .tile-face.back{opacity:1;}
+  .tile-icon{font-size:1.4rem;opacity:.9;}
+  .tile-label{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.6);}
+  .tile-value{font-family:var(--font-display);font-size:1.9rem;font-weight:700;color:var(--white);}
+  .tile-sub{font-size:.74rem;color:rgba(255,255,255,.55);}
+  .tile-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:.4rem;}
+  .tile-status-dot.live{background:#4ADE80;box-shadow:0 0 8px rgba(74,222,128,.6);animation:tilepulse 1.8s infinite;}
+  @keyframes tilepulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  .tile-data-note{position:absolute;bottom:.6rem;right:.8rem;font-family:var(--font-mono);font-size:.55rem;color:rgba(255,255,255,.3);}
+
+  /* TWO WORLDS */
+  .worlds-row{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;margin-top:2.6rem;}
+  .world-card{border-radius:18px;padding:1.9rem;}
+  .world-card.prof{border-top:3px solid var(--teal-light);}
+  .world-card.security{border-top:3px solid var(--amber);}
+  .world-label{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.7rem;font-weight:700;}
+  .world-card.prof .world-label{color:var(--teal-light);}
+  .world-card.security .world-label{color:var(--amber-light);}
+  .world-title{font-size:1.15rem;font-weight:700;color:var(--white);margin-bottom:.8rem;}
+  .world-desc{font-size:.86rem;color:rgba(255,255,255,.68);line-height:1.55;margin-bottom:1rem;}
+  .world-note{font-size:.78rem;color:rgba(255,255,255,.55);background:rgba(0,0,0,.18);padding:.7rem .9rem;border-radius:8px;line-height:1.4;}
+  .security-warning{margin-top:1.6rem;border-radius:12px;padding:1.4rem 1.7rem;border-left:4px solid #E07A5F;background:rgba(224,122,95,.12);}
+  .security-warning .label{font-family:var(--font-mono);font-size:.62rem;color:#F0A08A;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;font-weight:700;}
+  .security-warning p{font-size:.85rem;color:rgba(255,255,255,.82);line-height:1.5;}
+
+  /* GROUP CONNECTIONS */
+  .connections-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:2.4rem;}
+  .conn-card{border-radius:16px;padding:1.6rem;}
+  .conn-title{font-size:.96rem;font-weight:700;color:var(--white);margin-bottom:.6rem;}
+  .conn-desc{font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.45;}
+
+  /* GROUP/CTA */
+  .group-row{display:flex;gap:.6rem;margin-top:1.6rem;flex-wrap:wrap;}
+  .group-chip{border-radius:30px;padding:.6rem 1.1rem;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.75);}
+  .group-chip.this{border:1.5px solid var(--amber);color:var(--amber-light);}
+  .cta-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:3rem;margin-top:2.3rem;align-items:start;}
+  .contact-form{border-radius:18px;padding:1.9rem;}
+  .form-field{margin-bottom:.9rem;}
+  .form-field label{display:block;font-family:var(--font-mono);font-size:.62rem;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:.4rem;}
+  .form-field input,.form-field select{width:100%;padding:.65rem .85rem;border:1px solid rgba(255,255,255,.18);border-radius:8px;font-family:var(--font-body);font-size:.85rem;color:var(--white);background:rgba(255,255,255,.06);}
+  .form-field input::placeholder{color:rgba(255,255,255,.4);}
+  .form-submit{width:100%;background:var(--amber);color:var(--teal-deep);border:none;padding:.8rem;font-size:.85rem;font-weight:700;border-radius:30px;cursor:pointer;}
+  .form-submit:hover{background:var(--amber-deep);color:var(--white);}
+
+  footer{padding:2rem 2.5rem;position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.1);}
+  .footer-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+  .footer-brand{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--white);}
+  .footer-copy{font-family:var(--font-mono);font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  @media(max-width:1024px){
+    .tiles-grid{grid-template-columns:repeat(2,1fr);}
+    .tile.w2{grid-column:span 2;}
+    .worlds-row,.connections-row{grid-template-columns:1fr;}
+    .cta-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:768px){
+    .nav-links{display:none;}
+    .nav-hamburger{display:flex;}
+    .hero-inner{padding:2rem 1.5rem;}
+    section.page-section{padding:4rem 1.5rem;}
+    .glass-slide{padding:1.8rem;}
+    .slider-stage{height:560px;}
+    .tiles-grid{grid-template-columns:1fr 1fr;}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+
+<div class="ambient-bg">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+</div>
+
+<nav>
+  <div class="nav-glass"></div>
+  <div class="nav-content">
+    <div class="nav-logo">
+      <svg class="nav-mark" viewBox="0 0 200 200">
+        <rect x="30" y="30" width="60" height="60" rx="10" fill="#E0B36B" opacity="0.9"/>
+        <rect x="100" y="30" width="70" height="60" rx="10" fill="#3D7A75" opacity="0.9"/>
+        <rect x="30" y="100" width="70" height="70" rx="10" fill="#3D7A75" opacity="0.7"/>
+        <rect x="110" y="100" width="60" height="70" rx="10" fill="#E0B36B" opacity="0.7"/>
+      </svg>
+      <div><span class="nav-logo-text">BEFMS</span><span class="nav-logo-sub">Facilities Management</span></div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#tiles">Live Dashboard</a></li>
+      <li><a href="#worlds">Our Approach</a></li>
+      <li><a href="#connections">Group Network</a></li>
+    </ul>
+    <a href="#group-cta" class="nav-cta">Request a Proposal</a>
+    <button class="nav-hamburger" onclick="document.getElementById('mnav').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav" id="mnav">
+  <a href="#tiles">Live Dashboard</a>
+  <a href="#worlds">Our Approach</a>
+  <a href="#connections">Group Network</a>
+  <a href="#group-cta">Request a Proposal</a>
+</div>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="slider-stage" id="sliderStage">
+      <div class="glass-slide active glass" data-slide="1">
+        <p class="slide-tag">FACILITIES MANAGEMENT, LIVE</p>
+        <h1 class="slide-headline">Property management,<br/>seen <em>in real time</em></h1>
+        <p class="slide-body">Institutional-grade property management, security coordination, and operational maintenance for commercial hubs, business parks, and residential estates — managed as a live operation, not a quarterly report.</p>
+      </div>
+      <div class="glass-slide glass" data-slide="2">
+        <p class="slide-tag">PROPERTY MANAGEMENT</p>
+        <h1 class="slide-headline">Commercial hubs, estates,<br/>and everything <em>between</em></h1>
+        <p class="slide-body">Day-to-day operational management of commercial hubs, business parks, sectional title schemes, and large residential estates — one accountable team across every property type.</p>
+      </div>
+      <div class="glass-slide glass" data-slide="3">
+        <p class="slide-tag">PHYSICAL SECURITY COORDINATION</p>
+        <h1 class="slide-headline">PSIRA-registered,<br/><em>no exceptions</em></h1>
+        <p class="slide-body">Security is provided only through properly PSIRA-registered personnel and partners — registration is a criminal-law requirement in South Africa, and we treat it as non-negotiable.</p>
+      </div>
+      <div class="glass-slide glass" data-slide="4">
+        <p class="slide-tag">THE BECISS ESCALATION PATH</p>
+        <h1 class="slide-headline">When maintenance becomes<br/><em>structural</em></h1>
+        <p class="slide-body">Routine upkeep stays with BEFMS. The moment an issue is structural or infrastructure-related, it's referred straight to BECISS's ECSA-aligned engineering capability.</p>
+      </div>
+      <div class="glass-slide glass" data-slide="5">
+        <p class="slide-tag">A SPECIALISED OPERATING DIVISION OF BESBPO GROUP</p>
+        <h1 class="slide-headline">One Group, every stage<br/>of a property's <em>life</em></h1>
+        <p class="slide-body">From land (BBWS) to build (BESC) to ongoing operation (BEFMS and BECISS) — one accountable group managing every stage.</p>
+      </div>
+      <div class="slider-arrows">
+        <button class="slider-arrow" id="prevBtn">&#8592;</button>
+        <button class="slider-arrow" id="nextBtn">&#8594;</button>
+      </div>
+    </div>
+    <div class="slider-dots" id="sliderDots"></div>
+  </div>
+</section>
+
+<section class="page-section" id="tiles">
+  <div class="section-inner reveal">
+    <p class="section-eyebrow">LIVE DASHBOARD</p>
+    <h2 class="section-title">Your properties, live</h2>
+    <p class="section-lead">An illustration of how BEFMS's live operations dashboard surfaces property status, in real time. Demonstration data — not a live production feed.</p>
+    <div class="tiles-grid">
+      <div class="tile glass w2 h2" id="tileOccupancy">
+        <div class="tile-flip-inner">
+          <div class="tile-face front">
+            <span class="tile-icon">&#127970;</span>
+            <div><div class="tile-label">Occupancy Rate</div><div class="tile-value" id="occVal">94%</div><div class="tile-sub">Across managed portfolio</div></div>
+          </div>
+          <div class="tile-face back">
+            <span class="tile-icon">&#128202;</span>
+            <div><div class="tile-label">This Month</div><div class="tile-value">+2.1%</div><div class="tile-sub">Improved from last period</div></div>
+          </div>
+        </div>
+        <span class="tile-data-note">Illustrative</span>
+      </div>
+      <div class="tile glass" id="tileSecurity">
+        <div class="tile-flip-inner">
+          <div class="tile-face front">
+            <div class="tile-label"><span class="tile-status-dot live"></span>SECURITY</div>
+            <div class="tile-value" style="font-size:1.2rem;">All Clear</div>
+          </div>
+          <div class="tile-face back">
+            <div class="tile-label">PSIRA STATUS</div>
+            <div class="tile-value" style="font-size:1.1rem;">Verified</div>
+          </div>
+        </div>
+      </div>
+      <div class="tile glass" id="tileMaint">
+        <div class="tile-flip-inner">
+          <div class="tile-face front">
+            <div class="tile-label">OPEN TICKETS</div>
+            <div class="tile-value" id="maintVal">7</div>
+          </div>
+          <div class="tile-face back">
+            <div class="tile-label">AVG RESOLUTION</div>
+            <div class="tile-value" style="font-size:1.2rem;">2.4 days</div>
+          </div>
+        </div>
+      </div>
+      <div class="tile glass w2">
+        <div class="tile-flip-inner">
+          <div class="tile-face front">
+            <span class="tile-icon">&#128221;</span>
+            <div><div class="tile-label">Tenant Administration</div><div class="tile-sub">Lease renewals, rental collection, tenant relations</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tile glass">
+        <div class="tile-flip-inner">
+          <div class="tile-face front">
+            <div class="tile-label">EST. MANAGED</div>
+            <div class="tile-value" style="font-size:1.3rem;">Estates</div>
+          </div>
+        </div>
+      </div>
+      <div class="tile glass">
+        <div class="tile-flip-inner">
+          <div class="tile-face front">
+            <div class="tile-label">REFERRED</div>
+            <div class="tile-value" style="font-size:1.3rem;">&#8594; BECISS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page-section" id="worlds">
+  <div class="section-inner reveal">
+    <p class="section-eyebrow">OUR APPROACH</p>
+    <h2 class="section-title">Two different worlds,<br/>handled precisely</h2>
+    <p class="section-lead">Facilities management and physical security sit on genuinely different regulatory footing. We never blur the two.</p>
+    <div class="worlds-row">
+      <div class="world-card glass prof">
+        <div class="world-label">Professional, Not Statutory</div>
+        <div class="world-title">Facilities &amp; Property Management</div>
+        <div class="world-desc">No single statutory body governs facilities management in South Africa. Our team pursues recognised professional designations &mdash; SAFMA, SAPOA, and IREM's Certified Property Manager &mdash; as a genuine competency standard.</div>
+        <div class="world-note">Credibility through real professional development, never overstated as legal registration.</div>
+      </div>
+      <div class="world-card glass security">
+        <div class="world-label">Statutorily Regulated</div>
+        <div class="world-title">Physical Security Coordination</div>
+        <div class="world-desc">The Private Security Industry Regulation Act requires PSIRA registration for every security business and individual guard. Operating without it is a criminal offence.</div>
+        <div class="world-note">Security provided only through currently, verifiably PSIRA-registered personnel and partners.</div>
+      </div>
+    </div>
+    <div class="security-warning glass">
+      <div class="label">Why this distinction matters</div>
+      <p>Operating without PSIRA registration carries penalties of up to R10 million and imprisonment of up to 10 years &mdash; and procurement evaluators now reject submissions with even one outdated guard certificate. We treat this as non-negotiable, not a checkbox.</p>
+    </div>
+  </div>
+</section>
+
+<section class="page-section" id="connections">
+  <div class="section-inner reveal">
+    <p class="section-eyebrow">GROUP NETWORK</p>
+    <h2 class="section-title">Connected to the Group,<br/>not standing alone</h2>
+    <div class="connections-row">
+      <div class="conn-card glass"><div class="conn-title">&#8594; BECISS</div><div class="conn-desc">Structural or infrastructure issues identified during routine maintenance are referred to BECISS's ECSA-aligned engineering capability.</div></div>
+      <div class="conn-card glass"><div class="conn-title">&#8592; Propsale</div><div class="conn-desc">As Propsale (a planned future Group division) comes online, BEFMS becomes the natural channel for managing the properties it brings into the Group's orbit.</div></div>
+      <div class="conn-card glass"><div class="conn-title">&#8592; BEPIP</div><div class="conn-desc">Internal Vault and SPV-held assets under BEPIP are managed day-to-day by BEFMS once acquired.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="page-section" id="group-cta">
+  <div class="section-inner reveal">
+    <p class="section-eyebrow">A SPECIALISED OPERATING DIVISION OF BESBPO GROUP</p>
+    <h2 class="section-title">Let's manage it properly</h2>
+    <div class="group-row">
+      <div class="group-chip glass">BESBPO</div><div class="group-chip glass">REBES</div><div class="group-chip glass">REAAS</div><div class="group-chip glass">BESC</div><div class="group-chip glass">BEAS</div><div class="group-chip glass">BEPS</div><div class="group-chip glass">BBWS</div><div class="group-chip glass">BECISS</div><div class="group-chip glass">CSCS</div><div class="group-chip glass">BEPIP</div><div class="group-chip glass this">BEFMS</div>
+    </div>
+    <div class="cta-grid">
+      <div>
+        <p class="section-lead" style="margin-top:1.4rem;">Tell us about the property or estate you need managed. We'll respond within one business day.</p>
+        <p style="margin-top:1.7rem; font-family:var(--font-mono); font-size:.85rem; color:var(--amber-light);">Thabo Fortune Ndaba — Founder &amp; CEO</p>
+        <p style="font-size:.85rem; color:rgba(255,255,255,.6); margin-top:.3rem;">Tel: 069 456 0531 &nbsp;|&nbsp; partners@besbpo.co.za</p>
+      </div>
+      <form class="contact-form glass" onsubmit="event.preventDefault();this.querySelector('.form-submit').textContent='Request Sent ✓';">
+        <div class="form-field"><label>Your Name</label><input type="text" placeholder="Full name" /></div>
+        <div class="form-field"><label>Property Type</label>
+          <select><option value="" disabled selected>Select a property type</option><option>Commercial Hub / Business Park</option><option>Sectional Title Scheme</option><option>Residential Estate</option><option>Other</option></select>
+        </div>
+        <div class="form-field"><label>Email</label><input type="email" placeholder="you@company.co.za" /></div>
+        <button type="submit" class="form-submit">Request a Proposal</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">BEFMS</div>
+    <p class="footer-copy">© 2026 BEFMS · A Specialised Operating Division of BESBPO Group · South Africa</p>
+  </div>
+</footer>
+
+<script>
+  // ===== HERO SLIDER =====
+  const slides = document.querySelectorAll('.glass-slide');
+  const dotsContainer = document.getElementById('sliderDots');
+  let current = 0;
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  });
+  const dots = document.querySelectorAll('.slider-dot');
+  function goTo(i) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (i + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    resetAuto();
+  }
+  let autoTimer;
+  function resetAuto() { clearInterval(autoTimer); autoTimer = setInterval(() => goTo(current + 1), 5500); }
+  document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
+  document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
+  resetAuto();
+
+  // ===== LIVE TILES =====
+  function flipTile(id) {
+    const tile = document.getElementById(id);
+    if (tile) tile.classList.toggle('flipped');
+  }
+  setInterval(() => flipTile('tileOccupancy'), 4000);
+  setInterval(() => flipTile('tileSecurity'), 5000);
+  setInterval(() => flipTile('tileMaint'), 4600);
+
+  // Subtly vary illustrative numbers
+  setInterval(() => {
+    const occ = document.getElementById('occVal');
+    if (occ) {
+      const vals = ['94%', '93%', '95%', '94%'];
+      occ.textContent = vals[Math.floor(Math.random() * vals.length)];
+    }
+    const maint = document.getElementById('maintVal');
+    if (maint) {
+      const vals = ['7', '6', '8', '7'];
+      maint.textContent = vals[Math.floor(Math.random() * vals.length)];
+    }
+  }, 6000);
+
+  // ===== REVEAL ON SCROLL =====
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => obs.observe(el));
+
+  document.querySelectorAll('.mobile-nav a').forEach(a => {
+    a.addEventListener('click', () => document.getElementById('mnav').classList.remove('open'));
+  });
+</script>
+</body>
+</html>
